@@ -2,28 +2,27 @@
 #include "RCManager.h"
 
 RCManager::RCManager()
-   :_sensorPin(2), _boundary(0), _whiteCalibrate(0), _blackCalibrate(0), _result(0){}
+   :_sensorPin(2), _boundary(0), _whiteCalibrate(0), _blackCalibrate(0){}
 
 RCManager::RCManager(int sensorPin)
-   :_sensorPin(sensorPin), _boundary(0), _whiteCalibrate(0), _blackCalibrate(0), _result(0){
+   :_sensorPin(sensorPin), _boundary(0), _whiteCalibrate(0), _blackCalibrate(0){
    _samples = new RunningMedian(SIZE_OF_IR_MEDIAN_FILTER);
 }
 
 RCManager::~RCManager(){
    _sensorPin = 0;
-   _result = 0;
    delete _samples;
 }
 
-long RCManager::RCtime(){
+long RCManager::RCtime(int sensorPin){
    long result = 0;
-   pinMode(_sensorPin, OUTPUT);       // make pin OUTPUT
-   digitalWrite(_sensorPin, HIGH);    // make pin HIGH to discharge capacitor - study the schematic
+   pinMode(sensorPin, OUTPUT);       // make pin OUTPUT
+   digitalWrite(sensorPin, HIGH);    // make pin HIGH to discharge capacitor - study the schematic
    delay(1);                       // wait a  ms to make sure cap is discharged
 
-   pinMode(_sensorPin, INPUT);        // turn pin into an input and time till pin goes low
-   digitalWrite(_sensorPin, LOW);     // turn pullups off - or it won't work
-   while(digitalRead(_sensorPin)){    // wait for pin to go low
+   pinMode(sensorPin, INPUT);        // turn pin into an input and time till pin goes low
+   digitalWrite(sensorPin, LOW);     // turn pullups off - or it won't work
+   while(digitalRead(sensorPin)){    // wait for pin to go low
       result++;
    }
 
@@ -33,10 +32,10 @@ long RCManager::RCtime(){
 bool RCManager::isOnLine(){
    _samples->clear();
    for (int i = 0; i < SIZE_OF_IR_MEDIAN_FILTER; ++i){
-      _samples->add(RCtime());
+      _samples->add(RCtime(_sensorPin));
    }
-   // Serial.print(_samples->getMedian());
-   // Serial.print("  ");
+   Serial.print(_samples->getMedian());
+   Serial.print("  ");
 
    return _samples->getMedian() > _boundary;
 }
@@ -50,16 +49,15 @@ void RCManager::calibrateWhite(){
    // }  
    // _whiteCalibrate = bigResult / 30;
    // Serial.println(_whiteCalibrate);
-
    _samples->clear();
    for (int i = 0; i < SIZE_OF_IR_CALI_MEDIAN_FILTER; ++i){
-      long rcTime = RCtime();
+      long rcTime = RCtime(_sensorPin);
       Serial.println(rcTime);
       _samples->add(rcTime);
    }
    _whiteCalibrate = (long) _samples->getMedian();
-   // Serial.print("_whiteCalibrate = ");
-   // Serial.println(_whiteCalibrate);
+   Serial.print("_whiteCalibrate = ");
+   Serial.println(_whiteCalibrate);
 }
 
 void RCManager::calibrateBlack(){
@@ -72,15 +70,15 @@ void RCManager::calibrateBlack(){
 
    _samples->clear();
    for (int i = 0; i < SIZE_OF_IR_CALI_MEDIAN_FILTER; ++i){
-      long rcTime = RCtime();
+      long rcTime = RCtime(_sensorPin);
       Serial.println(rcTime);
       _samples->add(rcTime);
    }
    _blackCalibrate = (long) _samples->getMedian();
-   // Serial.print("_blackCalibrate = ");
-   // Serial.println(_blackCalibrate);
+   Serial.print("_blackCalibrate = ");
+   Serial.println(_blackCalibrate);
 
    _boundary = (_whiteCalibrate + _blackCalibrate) / 2;
-   // Serial.print("_boundary = ");
-   // Serial.println(_boundary);
+   Serial.print("_boundary = ");
+   Serial.println(_boundary);
 }
