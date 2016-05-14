@@ -13,4 +13,7 @@
 #define InterruptPin 2
 #define InterruptPin2 3
 
+#define SIZE_OF_IR_CALI_MEDIAN_FILTER 30
+#define SIZE_OF_IR_MEDIAN_FILTER 5
+
 #endif

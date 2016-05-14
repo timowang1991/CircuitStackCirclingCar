@@ -12,15 +12,15 @@ void setup()
    pinMode(InterruptPin2, INPUT_PULLUP);
    carManager = new CarManager(LeftRCPin, RightRCPin, LeftMotorPin, RightMotorPin);
 
-   attachInterrupt(InterruptNumber, interruptServiceRoutine, TriggerMode);
-   attachInterrupt(InterruptNumber2, interruptServiceRoutineSecond, TriggerMode);
+   // attachInterrupt(InterruptNumber, interruptServiceRoutine, TriggerMode);
+   // attachInterrupt(InterruptNumber2, interruptServiceRoutineSecond, TriggerMode);
 }
 
 void loop()
 {
    carManager->start();
 
-   delay(500);
+   delay(5);
 }
 
 void interruptServiceRoutine(){

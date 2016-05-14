@@ -5,11 +5,14 @@ RCManager::RCManager()
    :_sensorPin(2), _boundary(0), _whiteCalibrate(0), _blackCalibrate(0), _result(0){}
 
 RCManager::RCManager(int sensorPin)
-   :_sensorPin(sensorPin), _boundary(0), _whiteCalibrate(0), _blackCalibrate(0), _result(0){}
+   :_sensorPin(sensorPin), _boundary(0), _whiteCalibrate(0), _blackCalibrate(0), _result(0){
+   _samples = new RunningMedian(SIZE_OF_IR_MEDIAN_FILTER);
+}
 
 RCManager::~RCManager(){
    _sensorPin = 0;
    _result = 0;
+   delete _samples;
 }
 
 long RCManager::RCtime(){
@@ -28,27 +31,56 @@ long RCManager::RCtime(){
 }
 
 bool RCManager::isOnLine(){
-   return RCtime() > _boundary;
+   _samples->clear();
+   for (int i = 0; i < SIZE_OF_IR_MEDIAN_FILTER; ++i){
+      _samples->add(RCtime());
+   }
+   // Serial.print(_samples->getMedian());
+   // Serial.print("  ");
+
+   return _samples->getMedian() > _boundary;
 }
 
 void RCManager::calibrateWhite(){
-   long bigResult = 0;
-   int T = 30;
-   while(T--){
-      bigResult += RCtime();
-      Serial.println(RCtime());
-   }  
-   _whiteCalibrate = bigResult / 30;
-   Serial.println(_whiteCalibrate);
+   // long bigResult = 0;
+   // int T = 30;
+   // while(T--){
+   //    bigResult += RCtime();
+   //    Serial.println(RCtime());
+   // }  
+   // _whiteCalibrate = bigResult / 30;
+   // Serial.println(_whiteCalibrate);
+
+   _samples->clear();
+   for (int i = 0; i < SIZE_OF_IR_CALI_MEDIAN_FILTER; ++i){
+      long rcTime = RCtime();
+      Serial.println(rcTime);
+      _samples->add(rcTime);
+   }
+   _whiteCalibrate = (long) _samples->getMedian();
+   // Serial.print("_whiteCalibrate = ");
+   // Serial.println(_whiteCalibrate);
 }
 
 void RCManager::calibrateBlack(){
-   long bigResult = 0;
-   int T = 30;
-   while(T--){
-      bigResult += RCtime();
-   }  
-   _blackCalibrate = bigResult / 30;
+   // long bigResult = 0;
+   // int T = 30;
+   // while(T--){
+   //    bigResult += RCtime();
+   // }  
+   // _blackCalibrate = bigResult / 30;
+
+   _samples->clear();
+   for (int i = 0; i < SIZE_OF_IR_CALI_MEDIAN_FILTER; ++i){
+      long rcTime = RCtime();
+      Serial.println(rcTime);
+      _samples->add(rcTime);
+   }
+   _blackCalibrate = (long) _samples->getMedian();
+   // Serial.print("_blackCalibrate = ");
+   // Serial.println(_blackCalibrate);
 
    _boundary = (_whiteCalibrate + _blackCalibrate) / 2;
+   // Serial.print("_boundary = ");
+   // Serial.println(_boundary);
 }
